@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#07070f"/>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <!-- V shape -->
+  <text x="256" y="320" font-family="Arial Black, sans-serif" font-weight="900" font-size="260" fill="url(#g)" text-anchor="middle">V</text>
+  <!-- dot accent -->
+  <circle cx="370" cy="340" r="28" fill="#06b6d4"/>
+</svg>
