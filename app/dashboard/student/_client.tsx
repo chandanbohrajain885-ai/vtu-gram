@@ -20,6 +20,21 @@ export default function StudentDashboard() {
 
   useEffect(() => { loadProfile() }, [])
 
+  // Realtime: if admin changes subjects_config, refresh subjects live
+  useEffect(() => {
+    if (!profile?.department || !profile?.semester || !profile?.year) return
+    const channel = supabase.channel('subjects-live')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'subjects_config',
+      }, () => {
+        if (profile.department && profile.semester && profile.year) {
+          loadLiveSubjects(profile.department, profile.semester, profile.year)
+        }
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [profile?.department, profile?.semester, profile?.year])
+
   async function loadProfile() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -27,8 +42,14 @@ export default function StudentDashboard() {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       if (error || !data) { router.push('/login'); return }
       if (data.role !== 'student') { router.push('/login'); return }
-      setProfile(data as Profile)
-      // load follow counts
+      const p = data as Profile
+      setProfile(p)
+
+      // Load live subjects from subjects_config
+      if (p.department && p.semester && p.year) {
+        loadLiveSubjects(p.department, p.semester, p.year)
+      }
+
       const [{ count: fc }, { count: ing }] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
@@ -37,6 +58,15 @@ export default function StudentDashboard() {
       setFollowing(ing ?? 0)
     } catch { router.push('/login') }
     finally { setLoading(false) }
+  }
+
+  async function loadLiveSubjects(dept: string, sem: number, yr: number) {
+    const { data } = await supabase
+      .from('subjects_config').select('subject')
+      .eq('department', dept).eq('semester', sem).eq('year', yr).order('subject')
+    if (data && data.length > 0) {
+      setProfile((prev) => prev ? { ...prev, subjects: data.map((r: { subject: string }) => r.subject) } : prev)
+    }
   }
 
   async function handleLogout() {
