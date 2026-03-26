@@ -32,6 +32,20 @@ export type Content = {
   status: 'approved' | 'pending'
 }
 
+export type Follow = {
+  id: string
+  follower_id: string
+  following_id: string
+}
+
+export type Message = {
+  id: string
+  sender_id: string
+  receiver_id: string
+  content: string
+  created_at: string
+}
+
 export type StudentNote = {
   id: string
   user_id: string

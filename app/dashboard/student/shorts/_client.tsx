@@ -57,7 +57,7 @@ export default function ShortsPage() {
   return (
     <div className="bg-black min-h-screen">
       {/* Back button overlay */}
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed top-4 left-4 z-50 sm:left-60">
         <Link
           href="/dashboard/student"
           className="flex items-center gap-2 bg-black/60 backdrop-blur-sm text-white text-sm px-3 py-2 rounded-full border border-white/20"
