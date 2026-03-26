@@ -51,7 +51,7 @@ export default function ConvoClient() {
       myIdRef.current = user.id
       setMyId(user.id)
       loadOther()
-      loadMessages(user.id)
+      loadMessages(user.id, true)
       loadConnections(user.id)
       markRead(user.id)
       checkFollow(user.id)
@@ -90,7 +90,15 @@ export default function ConvoClient() {
         })
         .subscribe()
 
-      return () => { supabase.removeChannel(channel) }
+      // Polling fallback every 3s — ensures messages appear even if realtime drops
+      const poll = setInterval(() => {
+        if (myIdRef.current) loadMessages(myIdRef.current)
+      }, 3000)
+
+      return () => {
+        supabase.removeChannel(channel)
+        clearInterval(poll)
+      }
     })
   }, [otherId])
 
@@ -141,14 +149,19 @@ export default function ConvoClient() {
     setConnections((data ?? []) as OtherUser[])
   }
 
-  async function loadMessages(uid: string) {
-    setLoading(true)
+  async function loadMessages(uid: string, initial = false) {
+    if (initial) setLoading(true)
     try {
       const { data } = await supabase.from('messages').select('*')
         .or(`and(sender_id.eq.${uid},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${uid})`)
         .order('created_at', { ascending: true })
-      setMessages((data ?? []) as Message[])
-    } finally { setLoading(false) }
+      const fresh = (data ?? []) as Message[]
+      setMessages((prev) => {
+        const temps = prev.filter(m => m.id.startsWith('temp-'))
+        const keepTemps = temps.filter(t => !fresh.some(f => f.content === t.content && f.sender_id === t.sender_id))
+        return [...fresh, ...keepTemps]
+      })
+    } finally { if (initial) setLoading(false) }
   }
 
   async function sendMessage(e: React.FormEvent) {
