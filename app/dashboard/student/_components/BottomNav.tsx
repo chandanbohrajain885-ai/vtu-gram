@@ -39,13 +39,13 @@ export default function BottomNav() {
     })
 
     async function loadUnread(uid: string) {
-      // Count messages received in last 24h as proxy for "unread"
-      const since = new Date(Date.now() - 86400000).toISOString()
       const { count } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
         .eq('receiver_id', uid)
-        .gte('created_at', since)
+        .is('read_at', null)
+        .eq('deleted_for_receiver', false)
+        .eq('deleted_for_everyone', false)
       setUnread(count ?? 0)
     }
   }, [])

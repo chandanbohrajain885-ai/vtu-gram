@@ -57,6 +57,13 @@ export type Message = {
   receiver_id: string
   content: string
   created_at: string
+  read_at: string | null
+  deleted_for_everyone: boolean
+  deleted_for_sender: boolean
+  deleted_for_receiver: boolean
+  edited: boolean
+  reply_to_id: string | null
+  forwarded_from: string | null
 }
 
 export type StudentNote = {
