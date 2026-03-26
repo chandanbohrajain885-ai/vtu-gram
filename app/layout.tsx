@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import RegisterSW from './_components/RegisterSW'
 import InstallBanner from './_components/InstallBanner'
+import PushSetup from './_components/PushSetup'
 
 export const metadata: Metadata = {
   title: 'VTU GRAM',
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-[#07070f] text-slate-200 min-h-screen overscroll-none">
         <RegisterSW />
+        <PushSetup />
         <InstallBanner />
         {children}
       </body>
