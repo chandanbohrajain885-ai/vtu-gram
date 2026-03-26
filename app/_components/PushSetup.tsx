@@ -67,8 +67,51 @@ export default function PushSetup() {
 
   async function handleEnable() {
     setShow(false)
-    const ok = await subscribePush()
-    setStatus(ok ? 'subscribed' : 'denied')
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        alert('Push notifications not supported on this browser/device.')
+        return
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { alert('Please log in first.'); return }
+
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        alert('Notification permission denied. Please allow notifications in browser settings.')
+        setStatus('denied')
+        return
+      }
+
+      const reg = await navigator.serviceWorker.ready
+      let sub = await reg.pushManager.getSubscription()
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        })
+      }
+
+      const json = sub.toJSON()
+      const keys = json.keys as { p256dh: string; auth: string }
+
+      const { error } = await supabase.from('push_subscriptions').upsert({
+        user_id: user.id,
+        endpoint: sub.endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
+      }, { onConflict: 'user_id,endpoint' })
+
+      if (error) {
+        alert('Failed to save subscription: ' + error.message)
+        return
+      }
+
+      setStatus('subscribed')
+      alert('✅ Notifications enabled! You will now receive alerts.')
+    } catch (err) {
+      alert('Error: ' + String(err))
+    }
   }
 
   if (!show || status !== 'idle') return null
