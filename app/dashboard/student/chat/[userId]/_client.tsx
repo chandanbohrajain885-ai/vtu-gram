@@ -53,8 +53,15 @@ export default function ConvoClient() {
             (msg.sender_id === otherId && msg.receiver_id === uid)
           if (!isRelevant) return
           setMessages((prev) => {
+            // Dedupe: if real id already exists skip, also replace any temp with same content+sender
             if (prev.find(m => m.id === msg.id)) return prev
-            return [...prev, msg]
+            // Remove matching temp message (same sender+content sent within last 5s)
+            const filtered = prev.filter(m => {
+              if (!m.id.startsWith('temp-')) return true
+              const isRecent = Date.now() - parseInt(m.id.replace('temp-', '')) < 5000
+              return !(m.sender_id === msg.sender_id && m.content === msg.content && isRecent)
+            })
+            return [...filtered, msg]
           })
           if (msg.receiver_id === uid) {
             supabase.from('messages').update({ read_at: new Date().toISOString() }).eq('id', msg.id).then(() => {})
@@ -136,7 +143,7 @@ export default function ConvoClient() {
     // If not following: allow only 1 message total
     if (!iFollow) {
       const sentCount = messages.filter(m => m.sender_id === myId && !m.deleted_for_sender && !m.deleted_for_everyone).length
-      if (sentCount >= 1) return // blocked
+      if (sentCount >= 1) return
     }
 
     setSending(true)
@@ -144,11 +151,44 @@ export default function ConvoClient() {
     const replyId = replyTo?.id ?? null
     setText('')
     setReplyTo(null)
+
+    // Optimistic: show message immediately
+    const tempId = `temp-${Date.now()}`
+    const optimistic: Message = {
+      id: tempId,
+      sender_id: myId,
+      receiver_id: otherId,
+      content,
+      created_at: new Date().toISOString(),
+      read_at: null,
+      deleted_for_everyone: false,
+      deleted_for_sender: false,
+      deleted_for_receiver: false,
+      edited: false,
+      reply_to_id: replyId ?? null,
+      forwarded_from: null,
+    }
+    setMessages(prev => [...prev, optimistic])
+
     try {
-      await supabase.from('messages').insert({
+      const { data, error } = await supabase.from('messages').insert({
         sender_id: myId, receiver_id: otherId, content, reply_to_id: replyId,
-      })
-    } finally { setSending(false) }
+      }).select().single()
+
+      if (!error && data) {
+        // Replace temp with real
+        setMessages(prev => prev.map(m => m.id === tempId ? (data as Message) : m))
+      } else {
+        // Remove temp on error
+        setMessages(prev => prev.filter(m => m.id !== tempId))
+        setText(content)
+      }
+    } catch {
+      setMessages(prev => prev.filter(m => m.id !== tempId))
+      setText(content)
+    } finally {
+      setSending(false)
+    }
   }
 
   async function saveEdit() {
