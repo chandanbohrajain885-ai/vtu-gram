@@ -178,10 +178,7 @@ export default function StudentDashboard() {
             className="mt-4 w-full py-2 rounded-xl border border-[#1e1e35] hover:border-violet-500/50 text-slate-400 hover:text-violet-300 text-sm font-medium transition-all">
             Edit Profile
           </button>
-          <button onClick={enablePushNotifications}
-            className="mt-2 w-full py-2 rounded-xl border border-[#1e1e35] hover:border-yellow-500/50 text-slate-500 hover:text-yellow-300 text-sm font-medium transition-all">
-            🔔 Enable Notifications
-          </button>
+          <NotificationToggle userId={profile.id} />
         </div>
 
         {/* Quick access */}
@@ -240,5 +237,93 @@ export default function StudentDashboard() {
         <FollowListModal myId={profile.id} mode={followModal} onClose={() => setFollowModal(null)} />
       )}
     </div>
+  )
+}
+
+const VAPID_KEY = 'BBsDJViRjvsCnIIMGdKmsmejrO3pMv_ARYjPN6ilzbDVcvEAdafsMHT3eAClBepvO_T3BXIyvY2ZHBUAckXUVd8'
+
+function urlB64ToUint8(b: string) {
+  const pad = b.length % 4 === 0 ? '' : '='.repeat(4 - b.length % 4)
+  const raw = atob((b + pad).replace(/-/g, '+').replace(/_/g, '/'))
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)))
+}
+
+function NotificationToggle({ userId }: { userId: string }) {
+  const [enabled, setEnabled] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!('Notification' in window)) return
+    if (Notification.permission === 'granted') {
+      // Check if subscription exists
+      navigator.serviceWorker?.ready.then(reg =>
+        reg.pushManager.getSubscription().then(sub => setEnabled(!!sub))
+      )
+    }
+  }, [])
+
+  async function toggle() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Push not supported on this browser.'); return
+    }
+    setLoading(true)
+    try {
+      const reg = await navigator.serviceWorker.ready
+      if (enabled) {
+        // Unsubscribe
+        const sub = await reg.pushManager.getSubscription()
+        if (sub) {
+          await sub.unsubscribe()
+          await supabase.from('push_subscriptions').delete()
+            .eq('user_id', userId).eq('endpoint', sub.endpoint)
+        }
+        setEnabled(false)
+      } else {
+        // Subscribe
+        const permission = await Notification.requestPermission()
+        if (permission !== 'granted') {
+          alert('Please allow notifications in browser/device settings.'); return
+        }
+        let sub = await reg.pushManager.getSubscription()
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlB64ToUint8(VAPID_KEY),
+          })
+        }
+        const json = sub.toJSON()
+        const keys = json.keys as { p256dh: string; auth: string }
+        const { error } = await supabase.from('push_subscriptions').upsert({
+          user_id: userId, endpoint: sub.endpoint,
+          p256dh: keys.p256dh, auth: keys.auth,
+        }, { onConflict: 'user_id,endpoint' })
+        if (error) { alert('Save failed: ' + error.message); return }
+        setEnabled(true)
+        // Test notification immediately
+        if (reg.showNotification) {
+          reg.showNotification('VTU GRAM 🔔', {
+            body: 'Notifications enabled! You will now receive message alerts.',
+            icon: '/icons/icon-192.png',
+          })
+        }
+      }
+    } catch (e) { alert('Error: ' + String(e)) }
+    finally { setLoading(false) }
+  }
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return null
+
+  return (
+    <button onClick={toggle} disabled={loading}
+      className={`mt-2 w-full py-2 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+        enabled
+          ? 'border-yellow-600/40 text-yellow-300 bg-yellow-900/10'
+          : 'border-[#1e1e35] text-slate-500 hover:border-yellow-600/40 hover:text-yellow-300'
+      }`}>
+      {loading ? '...' : enabled ? '🔔 Notifications ON' : '🔕 Notifications OFF'}
+      <span className={`w-8 h-4 rounded-full transition-colors relative ${enabled ? 'bg-yellow-500' : 'bg-slate-700'}`}>
+        <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${enabled ? 'left-4' : 'left-0.5'}`} />
+      </span>
+    </button>
   )
 }
