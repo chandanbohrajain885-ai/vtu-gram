@@ -18,33 +18,21 @@ export default function LoginClient() {
     setError(null)
 
     try {
-      // Look up email by USN
-      const { data: profileData, error: profileLookupError } = await supabase
+      // Look up email by USN from profiles
+      const { data: profileData, error: lookupError } = await supabase
         .from('profiles')
-        .select('id, role')
+        .select('id, role, email')
         .eq('usn', usn.trim())
         .single()
 
-      if (profileLookupError || !profileData) {
+      if (lookupError || !profileData) {
         setError('USN not found. Please check and try again.')
         return
       }
 
-      // Get email from auth — we need to sign in via email
-      // Since we can't get email from profiles, we store it or use a workaround:
-      // Sign in with USN as identifier by fetching the user's email via admin lookup
-      // Instead: store email in profiles table OR use email field
-      // Simplest: add email column to profiles and look it up
-      const { data: emailData } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('usn', usn.trim())
-        .single()
-
-      const email = (emailData as { email?: string } | null)?.email
-
+      const email = (profileData as { email?: string | null }).email
       if (!email) {
-        setError('Account not found. Please sign up first.')
+        setError('Account has no email linked. Please contact support or re-register.')
         return
       }
 
