@@ -32,10 +32,23 @@ export default function BottomNav() {
           filter: `receiver_id=eq.${user.id}`,
         }, () => {
           setUnread((n) => n + 1)
-          // Play sound from nav level (works on any page)
-          const audio = new Audio('/notify.wav')
-          audio.volume = 1.0
-          audio.play().catch(() => {})
+          try {
+            const a = new Audio('/notify.wav')
+            a.volume = 1.0
+            a.play().catch(() => {
+              try {
+                const ctx = new AudioContext()
+                const osc = ctx.createOscillator()
+                const gain = ctx.createGain()
+                osc.connect(gain); gain.connect(ctx.destination)
+                osc.frequency.setValueAtTime(1200, ctx.currentTime)
+                osc.frequency.setValueAtTime(1600, ctx.currentTime + 0.15)
+                gain.gain.setValueAtTime(0.8, ctx.currentTime)
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
+                osc.start(); osc.stop(ctx.currentTime + 0.4)
+              } catch { /* silent */ }
+            })
+          } catch { /* silent */ }
         })
         .subscribe()
 

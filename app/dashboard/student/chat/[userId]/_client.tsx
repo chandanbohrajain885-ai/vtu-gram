@@ -17,9 +17,27 @@ if (typeof window !== 'undefined') {
 }
 
 function playNotify() {
-  if (!notifyAudio) return
-  notifyAudio.currentTime = 0
-  notifyAudio.play().catch(() => {})
+  // Try Audio element first
+  try {
+    const a = new Audio('/notify.wav')
+    a.volume = 1.0
+    a.play().catch(() => {
+      // Fallback: AudioContext beep
+      try {
+        const ctx = new AudioContext()
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        osc.frequency.setValueAtTime(1200, ctx.currentTime)
+        osc.frequency.setValueAtTime(1600, ctx.currentTime + 0.15)
+        gain.gain.setValueAtTime(0.8, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 0.4)
+      } catch { /* silent */ }
+    })
+  } catch { /* silent */ }
 }
 
 export default function ConvoClient() {

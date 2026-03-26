@@ -1,4 +1,4 @@
-const CACHE = 'vtugram-v3';
+const CACHE = 'vtugram-v4';
 const OFFLINE_URLS = ['/', '/login', '/signup'];
 
 self.addEventListener('install', (e) => {
