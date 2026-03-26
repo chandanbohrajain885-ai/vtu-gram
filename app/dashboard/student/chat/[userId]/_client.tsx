@@ -8,6 +8,20 @@ import { supabase, type Message, type Profile } from '@/lib/supabase'
 type OtherUser = Pick<Profile, 'id' | 'name' | 'avatar_url' | 'usn'>
 type MenuState = { msgId: string; mine: boolean } | null
 
+// Preload notification sound
+let notifyAudio: HTMLAudioElement | null = null
+if (typeof window !== 'undefined') {
+  notifyAudio = new Audio('/notify.wav')
+  notifyAudio.volume = 1.0
+  notifyAudio.load()
+}
+
+function playNotify() {
+  if (!notifyAudio) return
+  notifyAudio.currentTime = 0
+  notifyAudio.play().catch(() => {})
+}
+
 export default function ConvoClient() {
   const router = useRouter()
   const params = useParams()
@@ -64,6 +78,7 @@ export default function ConvoClient() {
             return [...filtered, msg]
           })
           if (msg.receiver_id === uid) {
+            playNotify()
             supabase.from('messages').update({ read_at: new Date().toISOString() }).eq('id', msg.id).then(() => {})
           }
         })

@@ -7,6 +7,14 @@ import { supabase, type Profile } from '@/lib/supabase'
 
 type ConvoUser = Pick<Profile, 'id' | 'name' | 'usn' | 'avatar_url'> & { unread: number }
 
+// Preload notification sound for chat list
+let listNotifyAudio: HTMLAudioElement | null = null
+if (typeof window !== 'undefined') {
+  listNotifyAudio = new Audio('/notify.wav')
+  listNotifyAudio.volume = 1.0
+  listNotifyAudio.load()
+}
+
 export default function ChatClient() {
   const router = useRouter()
   const [myId, setMyId] = useState<string | null>(null)
@@ -72,7 +80,14 @@ export default function ChatClient() {
       // Realtime: any message insert or update → reload list
       const channel = supabase.channel('chat-list-rt')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
-          () => loadConnections(user.id))
+          (payload) => {
+            const msg = payload.new as { receiver_id: string }
+            if (msg.receiver_id === user.id) {
+              // Play sound for incoming message
+              if (listNotifyAudio) { listNotifyAudio.currentTime = 0; listNotifyAudio.play().catch(() => {}) }
+            }
+            loadConnections(user.id)
+          })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' },
           () => loadConnections(user.id))
         .subscribe()

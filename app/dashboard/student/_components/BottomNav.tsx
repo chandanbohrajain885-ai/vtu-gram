@@ -32,6 +32,10 @@ export default function BottomNav() {
           filter: `receiver_id=eq.${user.id}`,
         }, () => {
           setUnread((n) => n + 1)
+          // Play sound from nav level (works on any page)
+          const audio = new Audio('/notify.wav')
+          audio.volume = 1.0
+          audio.play().catch(() => {})
         })
         .subscribe()
 
