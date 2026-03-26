@@ -153,40 +153,50 @@ export default function ConvoClient() {
 
   async function saveEdit() {
     if (!editingId || !editText.trim()) return
-    await supabase.from('messages').update({ content: editText.trim(), edited: true }).eq('id', editingId)
+    // Optimistic update
+    setMessages(prev => prev.map(m => m.id === editingId ? { ...m, content: editText.trim(), edited: true } : m))
     setEditingId(null)
     setEditText('')
     setMenu(null)
+    await supabase.from('messages').update({ content: editText.trim(), edited: true }).eq('id', editingId)
   }
 
   async function deleteForMe(msg: Message) {
     const field = msg.sender_id === myId ? 'deleted_for_sender' : 'deleted_for_receiver'
-    await supabase.from('messages').update({ [field]: true }).eq('id', msg.id)
+    // Optimistic remove
+    setMessages(prev => prev.filter(m => m.id !== msg.id))
     setMenu(null)
+    await supabase.from('messages').update({ [field]: true }).eq('id', msg.id)
   }
 
   async function deleteForEveryone(msg: Message) {
-    await supabase.from('messages').update({ deleted_for_everyone: true, content: 'This message was deleted' }).eq('id', msg.id)
+    // Optimistic update
+    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, deleted_for_everyone: true, content: 'This message was deleted' } : m))
     setMenu(null)
+    await supabase.from('messages').update({ deleted_for_everyone: true, content: 'This message was deleted' }).eq('id', msg.id)
   }
 
   async function clearChat() {
     if (!myId) return
+    setMessages([])
+    setMenu(null)
     await Promise.all([
       supabase.from('messages').update({ deleted_for_sender: true }).eq('sender_id', myId).eq('receiver_id', otherId),
       supabase.from('messages').update({ deleted_for_receiver: true }).eq('receiver_id', myId).eq('sender_id', otherId),
     ])
-    setMessages([])
-    setMenu(null)
   }
 
   async function forwardTo(targetId: string) {
     if (!forwardMsg || !myId) return
-    await supabase.from('messages').insert({
+    setForwardMsg(null)
+    const { data } = await supabase.from('messages').insert({
       sender_id: myId, receiver_id: targetId,
       content: forwardMsg.content, forwarded_from: forwardMsg.id,
-    })
-    setForwardMsg(null)
+    }).select().single()
+    // If forwarding to same convo, add optimistically (realtime will also fire but deduped)
+    if (data && targetId === otherId) {
+      setMessages(prev => prev.find(m => m.id === (data as Message).id) ? prev : [...prev, data as Message])
+    }
   }
 
   const visible = messages.filter((m) => {
