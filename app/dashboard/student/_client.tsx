@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase, type Profile } from '@/lib/supabase'
 import SubjectModal from './_components/SubjectModal'
 import ProfileEditModal from './_components/ProfileEditModal'
+import FollowListModal from './_components/FollowListModal'
 import Link from 'next/link'
 
 export default function StudentDashboard() {
@@ -15,6 +16,7 @@ export default function StudentDashboard() {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [followers, setFollowers] = useState(0)
   const [following, setFollowing] = useState(0)
+  const [followModal, setFollowModal] = useState<'followers' | 'following' | null>(null)
 
   useEffect(() => { loadProfile() }, [])
 
@@ -98,14 +100,14 @@ export default function StudentDashboard() {
                   <p className="text-base font-bold text-slate-100">{subjects.length}</p>
                   <p className="text-xs text-slate-500">Subjects</p>
                 </div>
-                <div className="text-center">
+                <button className="text-center" onClick={() => setFollowModal('followers')}>
                   <p className="text-base font-bold text-slate-100">{followers}</p>
-                  <p className="text-xs text-slate-500">Followers</p>
-                </div>
-                <div className="text-center">
+                  <p className="text-xs text-slate-500 hover:text-violet-400 transition-colors">Followers</p>
+                </button>
+                <button className="text-center" onClick={() => setFollowModal('following')}>
                   <p className="text-base font-bold text-slate-100">{following}</p>
-                  <p className="text-xs text-slate-500">Following</p>
-                </div>
+                  <p className="text-xs text-slate-500 hover:text-violet-400 transition-colors">Following</p>
+                </button>
               </div>
             </div>
           </div>
@@ -169,6 +171,9 @@ export default function StudentDashboard() {
       {showEditProfile && (
         <ProfileEditModal profile={profile} onClose={() => setShowEditProfile(false)}
           onSaved={(updated) => { setProfile(updated) }} />
+      )}
+      {followModal && (
+        <FollowListModal myId={profile.id} mode={followModal} onClose={() => setFollowModal(null)} />
       )}
     </div>
   )

@@ -24,21 +24,33 @@ export default function ChatClient() {
   async function loadConnections(uid: string) {
     setLoading(true)
     try {
-      // People I follow AND who follow me back (mutual = connected)
-      const [{ data: iFollow }, { data: theyFollow }] = await Promise.all([
-        supabase.from('follows').select('following_id').eq('follower_id', uid),
-        supabase.from('follows').select('follower_id').eq('following_id', uid),
-      ])
+      // People I follow
+      const { data: iFollow } = await supabase
+        .from('follows').select('following_id').eq('follower_id', uid)
+      // People who follow me
+      const { data: theyFollow } = await supabase
+        .from('follows').select('follower_id').eq('following_id', uid)
+      // People who have messaged me
+      const { data: msgSenders } = await supabase
+        .from('messages').select('sender_id').eq('receiver_id', uid)
+
       const iFollowSet = new Set((iFollow ?? []).map((r: { following_id: string }) => r.following_id))
       const theyFollowSet = new Set((theyFollow ?? []).map((r: { follower_id: string }) => r.follower_id))
-      const mutualIds = [...iFollowSet].filter((id) => theyFollowSet.has(id))
+      const senderSet = new Set((msgSenders ?? []).map((r: { sender_id: string }) => r.sender_id))
 
-      if (mutualIds.length === 0) { setConnections([]); return }
+      // Union: mutual follows + anyone who messaged me
+      const allIds = new Set([
+        ...[...iFollowSet].filter(id => theyFollowSet.has(id)), // mutual
+        ...senderSet, // messaged me
+      ])
+      allIds.delete(uid)
+
+      if (allIds.size === 0) { setConnections([]); return }
 
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, name, usn, avatar_url')
-        .in('id', mutualIds)
+        .in('id', [...allIds])
 
       setConnections((profiles ?? []) as ConvoUser[])
     } catch { setConnections([]) }
@@ -57,8 +69,8 @@ export default function ChatClient() {
         ) : connections.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-4xl mb-3">💬</p>
-            <p className="text-slate-400 text-sm">No connections yet.</p>
-            <p className="text-slate-600 text-xs mt-1">Follow someone and get a follow back to start chatting.</p>
+            <p className="text-slate-400 text-sm">No messages yet.</p>
+            <p className="text-slate-600 text-xs mt-1">Follow someone and start chatting.</p>
             <Link href="/dashboard/student/search"
               className="inline-block mt-4 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-xl transition-colors">
               Find Students
