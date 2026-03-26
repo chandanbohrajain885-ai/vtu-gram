@@ -1,4 +1,4 @@
-const CACHE = 'vtugram-v2';
+const CACHE = 'vtugram-v3';
 const OFFLINE_URLS = ['/', '/login', '/signup'];
 
 self.addEventListener('install', (e) => {
@@ -42,9 +42,11 @@ self.addEventListener('push', (e) => {
     badge: '/icons/icon-192.png',
     tag: data.tag || 'vtugram-msg',
     renotify: true,
+    silent: false,                    // allow OS to play sound
+    vibrate: [200, 100, 200],         // vibration pattern
     data: { url: data.url || '/dashboard/student/chat' },
     actions: [
-      { action: 'open', title: 'Open' },
+      { action: 'open', title: '💬 Open Chat' },
       { action: 'dismiss', title: 'Dismiss' },
     ],
   };
