@@ -8,6 +8,36 @@ import ProfileEditModal from './_components/ProfileEditModal'
 import FollowListModal from './_components/FollowListModal'
 import Link from 'next/link'
 
+// Push notification helper
+async function enablePushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Push notifications not supported on this browser.'); return
+  }
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const permission = await Notification.requestPermission()
+    if (permission !== 'granted') {
+      alert('Please allow notifications in your browser settings.'); return
+    }
+    const reg = await navigator.serviceWorker.ready
+    let sub = await reg.pushManager.getSubscription()
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: 'BBsDJViRjvsCnIIMGdKmsmejrO3pMv_ARYjPN6ilzbDVcvEAdafsMHT3eAClBepvO_T3BXIyvY2ZHBUAckXUVd8',
+      })
+    }
+    const json = sub.toJSON()
+    const keys = json.keys as { p256dh: string; auth: string }
+    const { error } = await supabase.from('push_subscriptions').upsert({
+      user_id: user.id, endpoint: sub.endpoint, p256dh: keys.p256dh, auth: keys.auth,
+    }, { onConflict: 'user_id,endpoint' })
+    if (error) { alert('Error: ' + error.message); return }
+    alert('✅ Notifications enabled!')
+  } catch (e) { alert('Error: ' + String(e)) }
+}
+
 export default function StudentDashboard() {
   const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -147,6 +177,10 @@ export default function StudentDashboard() {
           <button onClick={() => setShowEditProfile(true)}
             className="mt-4 w-full py-2 rounded-xl border border-[#1e1e35] hover:border-violet-500/50 text-slate-400 hover:text-violet-300 text-sm font-medium transition-all">
             Edit Profile
+          </button>
+          <button onClick={enablePushNotifications}
+            className="mt-2 w-full py-2 rounded-xl border border-[#1e1e35] hover:border-yellow-500/50 text-slate-500 hover:text-yellow-300 text-sm font-medium transition-all">
+            🔔 Enable Notifications
           </button>
         </div>
 

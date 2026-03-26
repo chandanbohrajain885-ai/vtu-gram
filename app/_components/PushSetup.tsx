@@ -53,16 +53,15 @@ export default function PushSetup() {
       setStatus('unsupported'); return
     }
     if (Notification.permission === 'granted') {
-      // Already granted — subscribe silently
       subscribePush().then(ok => { if (ok) setStatus('subscribed') })
       return
     }
     if (Notification.permission === 'denied') {
       setStatus('denied'); return
     }
-    // Show prompt after 2s
-    const t = setTimeout(() => setShow(true), 2000)
-    return () => clearTimeout(t)
+    // Always show prompt — remove old dismissed flag
+    localStorage.removeItem('pwa-dismissed')
+    setShow(true)
   }, [])
 
   async function handleEnable() {
