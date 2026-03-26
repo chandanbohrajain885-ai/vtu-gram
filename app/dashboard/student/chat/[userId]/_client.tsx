@@ -25,6 +25,8 @@ export default function ConvoClient() {
   const [replyTo, setReplyTo] = useState<Message | null>(null)
   const [forwardMsg, setForwardMsg] = useState<Message | null>(null)
   const [connections, setConnections] = useState<OtherUser[]>([])
+  const [iFollow, setIFollow] = useState(false)
+  const [togglingFollow, setTogglingFollow] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const myIdRef = useRef<string | null>(null)
@@ -38,6 +40,7 @@ export default function ConvoClient() {
       loadMessages(user.id)
       loadConnections(user.id)
       markRead(user.id)
+      checkFollow(user.id)
 
       const channel = supabase.channel(`convo-${user.id}-${otherId}`)
         .on('postgres_changes', {
@@ -78,6 +81,26 @@ export default function ConvoClient() {
       .eq('receiver_id', uid).eq('sender_id', otherId).is('read_at', null)
   }
 
+  async function checkFollow(uid: string) {
+    const { data } = await supabase.from('follows')
+      .select('id').eq('follower_id', uid).eq('following_id', otherId).maybeSingle()
+    setIFollow(!!data)
+  }
+
+  async function toggleFollow() {
+    if (!myId) return
+    setTogglingFollow(true)
+    try {
+      if (iFollow) {
+        await supabase.from('follows').delete().eq('follower_id', myId).eq('following_id', otherId)
+        setIFollow(false)
+      } else {
+        await supabase.from('follows').insert({ follower_id: myId, following_id: otherId })
+        setIFollow(true)
+      }
+    } finally { setTogglingFollow(false) }
+  }
+
   async function loadOther() {
     const { data } = await supabase.from('profiles').select('id, name, avatar_url, usn').eq('id', otherId).single()
     if (data) setOther(data as OtherUser)
@@ -109,6 +132,13 @@ export default function ConvoClient() {
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim() || !myId || sending) return
+
+    // If not following: allow only 1 message total
+    if (!iFollow) {
+      const sentCount = messages.filter(m => m.sender_id === myId && !m.deleted_for_sender && !m.deleted_for_everyone).length
+      if (sentCount >= 1) return // blocked
+    }
+
     setSending(true)
     const content = text.trim()
     const replyId = replyTo?.id ?? null
@@ -178,9 +208,19 @@ export default function ConvoClient() {
           <p className="text-sm font-semibold text-slate-200 truncate">{other?.name ?? '...'}</p>
           <p className="text-xs text-slate-500">{other?.usn ?? ''}</p>
         </div>
-        <button onClick={clearChat} className="text-xs text-red-400 hover:text-red-300 border border-red-900/40 px-3 py-1.5 rounded-lg transition-all shrink-0">
-          Clear
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={toggleFollow} disabled={togglingFollow}
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all disabled:opacity-50 ${
+              iFollow
+                ? 'border border-slate-700 text-slate-400 hover:border-red-700/50 hover:text-red-400'
+                : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-sm shadow-violet-900/30'
+            }`}>
+            {togglingFollow ? '...' : iFollow ? 'Unfollow' : 'Follow'}
+          </button>
+          <button onClick={clearChat} className="text-xs text-red-400 hover:text-red-300 border border-red-900/40 px-3 py-1.5 rounded-lg transition-all">
+            Clear
+          </button>
+        </div>
       </header>
 
       {/* Messages scroll area */}
@@ -264,20 +304,34 @@ export default function ConvoClient() {
       )}
 
       {/* Input */}
-      {!editingId && (
-        <form onSubmit={sendMessage} className="shrink-0 glass border-t border-[#1e1e35] px-3 py-3 flex gap-2 items-center">
-          <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)}
-            placeholder={replyTo ? 'Write a reply...' : 'Type a message...'}
-            className="flex-1 bg-white/5 border border-[#1e1e35] rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500 transition-colors min-w-0"
-          />
-          <button type="submit" disabled={sending || !text.trim()}
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 disabled:opacity-40 flex items-center justify-center shrink-0 shadow-md shadow-violet-900/30">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
-            </svg>
-          </button>
-        </form>
-      )}
+      {!editingId && (() => {
+        const sentCount = messages.filter(m => m.sender_id === myId && !m.deleted_for_sender && !m.deleted_for_everyone).length
+        const blocked = !iFollow && sentCount >= 1
+        return blocked ? (
+          <div className="shrink-0 glass border-t border-[#1e1e35] px-4 py-3 text-center">
+            <p className="text-xs text-slate-500">
+              Follow <span className="text-violet-400">{other?.name}</span> to send more messages.
+            </p>
+            <button onClick={toggleFollow} disabled={togglingFollow}
+              className="mt-2 px-4 py-1.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-xs rounded-lg font-medium">
+              {togglingFollow ? '...' : 'Follow Now'}
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={sendMessage} className="shrink-0 glass border-t border-[#1e1e35] px-3 py-3 flex gap-2 items-center">
+            <input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)}
+              placeholder={replyTo ? 'Write a reply...' : 'Type a message...'}
+              className="flex-1 bg-white/5 border border-[#1e1e35] rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500 transition-colors min-w-0"
+            />
+            <button type="submit" disabled={sending || !text.trim()}
+              className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 disabled:opacity-40 flex items-center justify-center shrink-0 shadow-md shadow-violet-900/30">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </form>
+        )
+      })()}
 
       {/* Forward modal */}
       {forwardMsg && (
