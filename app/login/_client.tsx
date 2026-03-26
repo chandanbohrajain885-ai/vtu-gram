@@ -25,8 +25,8 @@ export default function LoginClient() {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
       if (authError) { setError('Incorrect password. Please try again.'); return }
       if (!authData.user) { setError('Login failed. Please try again.'); return }
-      if (profileData.role === 'super_admin') router.push('/dashboard/super-admin')
-      else router.push('/dashboard/student')
+      if (profileData.role === 'super_admin') router.replace('/dashboard/super-admin')
+      else router.replace('/dashboard/student')
     } catch { setError('An unexpected error occurred.') }
     finally { setLoading(false) }
   }
