@@ -7,6 +7,17 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey)
 
+export type Badge = 'Student' | 'PhD Scholar' | 'Professor' | 'Assistant Professor'
+
+export const BADGES: Badge[] = ['Student', 'PhD Scholar', 'Professor', 'Assistant Professor']
+
+export const BADGE_STYLE: Record<Badge, string> = {
+  'Student': 'bg-blue-900/40 text-blue-300 border-blue-700/40',
+  'PhD Scholar': 'bg-purple-900/40 text-purple-300 border-purple-700/40',
+  'Professor': 'bg-amber-900/40 text-amber-300 border-amber-700/40',
+  'Assistant Professor': 'bg-emerald-900/40 text-emerald-300 border-emerald-700/40',
+}
+
 export type Profile = {
   id: string
   name: string
@@ -18,6 +29,8 @@ export type Profile = {
   subjects: string[]
   is_approved: boolean
   avatar_url: string | null
+  email: string | null
+  badge: Badge | null
 }
 
 export type Content = {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase, DEPARTMENTS } from '@/lib/supabase'
+import { supabase, DEPARTMENTS, BADGES, type Badge } from '@/lib/supabase'
 
 export default function SignupClient() {
   const router = useRouter()
@@ -13,7 +13,7 @@ export default function SignupClient() {
   const [loadingSubjects, setLoadingSubjects] = useState(false)
   const [form, setForm] = useState({
     name: '', email: '', password: '', usn: '',
-    department: '', semester: '', year: '',
+    department: '', semester: '', year: '', badge: '' as Badge | '',
   })
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
 
@@ -89,6 +89,7 @@ export default function SignupClient() {
         year: isNaN(yearNum) ? null : yearNum,
         subjects: selectedSubjects,
         is_approved: true,
+        badge: form.badge || null,
       })
       if (profileError) { setError(profileError.message); return }
       router.push('/dashboard/student')
@@ -139,6 +140,24 @@ export default function SignupClient() {
               <option value="">Select department</option>
               {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
+          </div>
+
+          {/* Badge */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-2">I am a</label>
+            <div className="grid grid-cols-2 gap-2">
+              {BADGES.map((b) => (
+                <button key={b} type="button"
+                  onClick={() => setForm((p) => ({ ...p, badge: p.badge === b ? '' : b }))}
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                    form.badge === b
+                      ? 'bg-violet-600/30 border-violet-500 text-violet-200'
+                      : 'bg-white/5 border-[#1e1e35] text-slate-400 hover:border-violet-600/40 hover:text-slate-200'
+                  }`}>
+                  {b}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Year + Semester */}

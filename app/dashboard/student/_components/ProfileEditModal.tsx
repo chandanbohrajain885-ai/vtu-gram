@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { supabase, DEPARTMENTS, type Profile } from '@/lib/supabase'
+import { supabase, DEPARTMENTS, BADGES, BADGE_STYLE, type Profile, type Badge } from '@/lib/supabase'
 
 interface Props {
   profile: Profile
@@ -12,6 +12,7 @@ interface Props {
 export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(profile.name)
+  const [badge, setBadge] = useState<Badge | null>(profile.badge ?? null)
   const [department, setDepartment] = useState(profile.department ?? '')
   const [year, setYear] = useState(String(profile.year ?? ''))
   const [semester, setSemester] = useState(String(profile.semester ?? ''))
@@ -82,6 +83,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
         semester: semester ? parseInt(semester, 10) : null,
         subjects: selectedSubjects,
         avatar_url,
+        badge,
       }
 
       const { error: updateError } = await supabase
@@ -134,6 +136,24 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
             <label className="block text-sm text-slate-400 mb-1">Full Name</label>
             <input value={name} onChange={(e) => setName(e.target.value)} required
               className="w-full bg-[#0a0a0f] border border-slate-700 rounded-lg px-3 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" />
+          </div>
+
+          {/* Badge */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-2">I am a</label>
+            <div className="grid grid-cols-2 gap-2">
+              {BADGES.map((b) => (
+                <button key={b} type="button"
+                  onClick={() => setBadge(badge === b ? null : b)}
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                    badge === b
+                      ? BADGE_STYLE[b]
+                      : 'bg-white/5 border-[#1e1e35] text-slate-400 hover:border-violet-600/40 hover:text-slate-200'
+                  }`}>
+                  {b}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* USN — read only */}

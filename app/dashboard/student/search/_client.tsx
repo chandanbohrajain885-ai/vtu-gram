@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase, type Profile } from '@/lib/supabase'
+import { supabase, type Profile, BADGE_STYLE } from '@/lib/supabase'
 
-type SearchProfile = Pick<Profile, 'id' | 'name' | 'usn' | 'department' | 'semester' | 'avatar_url'>
+type SearchProfile = Pick<Profile, 'id' | 'name' | 'usn' | 'department' | 'semester' | 'avatar_url' | 'badge'>
 
 export default function SearchClient() {
   const router = useRouter()
@@ -36,7 +36,7 @@ export default function SearchClient() {
     try {
       const { data } = await supabase
         .from('profiles')
-        .select('id, name, usn, department, semester, avatar_url')
+        .select('id, name, usn, department, semester, avatar_url, badge')
         .eq('role', 'student')
         .neq('id', myId ?? '')
         .or(`name.ilike.%${query.trim()}%,usn.ilike.%${query.trim()}%`)
@@ -91,7 +91,14 @@ export default function SearchClient() {
                 : <span className="text-lg">👤</span>}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-200 truncate">{student.name}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-sm font-semibold text-slate-200 truncate">{student.name}</p>
+                {student.badge && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${BADGE_STYLE[student.badge]}`}>
+                    {student.badge}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">{student.usn ?? ''} · {student.department ?? ''} Sem {student.semester ?? ''}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">

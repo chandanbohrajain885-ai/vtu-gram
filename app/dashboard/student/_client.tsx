@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, type Profile } from '@/lib/supabase'
+import { supabase, type Profile, BADGE_STYLE } from '@/lib/supabase'
 import SubjectModal from './_components/SubjectModal'
 import ProfileEditModal from './_components/ProfileEditModal'
 import FollowListModal from './_components/FollowListModal'
@@ -92,6 +92,11 @@ export default function StudentDashboard() {
             </button>
             <div className="flex-1">
               <p className="text-base font-bold text-slate-100">{profile.name}</p>
+              {profile.badge && (
+                <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full border mb-1 ${BADGE_STYLE[profile.badge]}`}>
+                  {profile.badge}
+                </span>
+              )}
               <p className="text-xs text-slate-500 mb-3">{profile.usn ?? ''} · {profile.department ?? ''} · Sem {profile.semester ?? '—'}</p>
               <div className="flex gap-6">
                 <div className="text-center">
