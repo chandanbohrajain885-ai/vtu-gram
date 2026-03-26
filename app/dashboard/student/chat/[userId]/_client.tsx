@@ -82,9 +82,9 @@ export default function ConvoClient() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#0a0a0f]">
+    <div className="flex flex-col h-screen grad-bg">
       {/* Header */}
-      <header className="bg-[#13131a] border-b border-slate-800 px-4 py-3 flex items-center gap-3 shrink-0">
+      <header className="glass border-b border-[#1e1e35] px-4 py-3 flex items-center gap-3 shrink-0">
         <Link href="/dashboard/student/chat" className="text-slate-400 hover:text-slate-200 transition-colors text-lg">
           ←
         </Link>
@@ -104,16 +104,16 @@ export default function ConvoClient() {
         {loading ? (
           <p className="text-slate-500 text-sm text-center py-10">Loading...</p>
         ) : messages.length === 0 ? (
-          <p className="text-slate-600 text-sm text-center py-10">No messages yet. Say hi!</p>
+          <p className="text-slate-600 text-sm text-center py-10">No messages yet. Say hi! 👋</p>
         ) : (
           messages.map((msg) => {
             const mine = msg.sender_id === myId
             return (
               <div key={msg.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                   mine
-                    ? 'bg-violet-600 text-white rounded-br-sm'
-                    : 'bg-[#13131a] border border-slate-800 text-slate-200 rounded-bl-sm'
+                    ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-white rounded-br-sm shadow-lg shadow-violet-900/30'
+                    : 'glass text-slate-200 rounded-bl-sm'
                 }`}>
                   {msg.content}
                 </div>
@@ -126,14 +126,14 @@ export default function ConvoClient() {
 
       {/* Input */}
       <form onSubmit={sendMessage}
-        className="shrink-0 bg-[#13131a] border-t border-slate-800 px-4 py-3 flex gap-3 items-center">
+        className="shrink-0 glass border-t border-[#1e1e35] px-4 py-3 flex gap-3 items-center">
         <input
           value={text} onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 bg-[#0a0a0f] border border-slate-700 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500"
+          className="flex-1 bg-white/5 border border-[#1e1e35] rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500 transition-colors"
         />
         <button type="submit" disabled={sending || !text.trim()}
-          className="w-10 h-10 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 flex items-center justify-center transition-colors shrink-0">
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-40 flex items-center justify-center transition-all shadow-lg shadow-violet-900/30 shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
           </svg>

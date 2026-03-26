@@ -58,11 +58,10 @@ export default function ChatClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
-      <header className="bg-[#13131a] border-b border-slate-800 px-4 py-4 sticky top-0 z-30">
+    <div className="min-h-screen grad-bg">
+      <header className="glass border-b border-[#1e1e35] px-4 py-4 sticky top-0 z-30">
         <p className="text-sm font-semibold text-slate-300">Messages</p>
       </header>
-
       <div className="max-w-2xl mx-auto px-4 py-4">
         {loading ? (
           <p className="text-slate-500 text-sm text-center py-10">Loading...</p>
@@ -72,7 +71,7 @@ export default function ChatClient() {
             <p className="text-slate-400 text-sm">No messages yet.</p>
             <p className="text-slate-600 text-xs mt-1">Follow someone and start chatting.</p>
             <Link href="/dashboard/student/search"
-              className="inline-block mt-4 px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-xl transition-colors">
+              className="inline-block mt-4 px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm rounded-xl transition-all">
               Find Students
             </Link>
           </div>
@@ -80,8 +79,8 @@ export default function ChatClient() {
           <div className="space-y-2">
             {connections.map((user) => (
               <Link key={user.id} href={`/dashboard/student/chat/${user.id}`}
-                className="flex items-center gap-3 bg-[#13131a] border border-slate-800 hover:border-violet-500 rounded-2xl px-4 py-3 transition-all">
-                <div className="w-11 h-11 rounded-full overflow-hidden bg-violet-900/40 border border-slate-700 flex items-center justify-center shrink-0">
+                className="flex items-center gap-3 glass hover:border-violet-500/40 rounded-2xl px-4 py-3 transition-all">
+                <div className="w-11 h-11 rounded-full overflow-hidden bg-violet-900/40 border border-violet-700/30 flex items-center justify-center shrink-0">
                   {user.avatar_url
                     ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
                     : <span className="text-lg">👤</span>}
@@ -90,7 +89,7 @@ export default function ChatClient() {
                   <p className="text-sm font-semibold text-slate-200">{user.name}</p>
                   <p className="text-xs text-slate-500">{user.usn ?? ''}</p>
                 </div>
-                <span className="text-slate-600 text-lg">›</span>
+                <span className="text-violet-600 text-lg">›</span>
               </Link>
             ))}
           </div>

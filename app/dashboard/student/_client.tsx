@@ -56,9 +56,9 @@ export default function StudentDashboard() {
   const subjects: string[] = Array.isArray(profile.subjects) ? profile.subjects : []
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen grad-bg">
       {/* Top bar */}
-      <header className="bg-[#13131a] border-b border-slate-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+      <header className="glass border-b border-[#1e1e35] px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <span className="text-base font-black bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent sm:hidden">
           VTU GRAM
         </span>
@@ -81,17 +81,15 @@ export default function StudentDashboard() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Profile card — Instagram style */}
-        <div className="bg-[#13131a] rounded-2xl border border-slate-800 p-5 mb-6">
-          <div className="flex items-center gap-5">
-            {/* Avatar */}
+        <div className="glass rounded-2xl p-5 mb-6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/5 to-cyan-600/5 pointer-events-none" />
+          <div className="flex items-center gap-5 relative">
             <button onClick={() => setShowEditProfile(true)}
-              className="w-20 h-20 rounded-full overflow-hidden bg-violet-900/40 border-2 border-violet-700 hover:border-violet-400 flex items-center justify-center shrink-0 transition-colors">
+              className="w-20 h-20 rounded-full overflow-hidden avatar-glow flex items-center justify-center shrink-0 transition-all hover:scale-105">
               {profile.avatar_url
                 ? <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                : <span className="text-4xl">👤</span>}
+                : <span className="text-4xl bg-violet-900/60 w-full h-full flex items-center justify-center">👤</span>}
             </button>
-
-            {/* Stats */}
             <div className="flex-1">
               <p className="text-base font-bold text-slate-100">{profile.name}</p>
               <p className="text-xs text-slate-500 mb-3">{profile.usn ?? ''} · {profile.department ?? ''} · Sem {profile.semester ?? '—'}</p>
@@ -102,18 +100,17 @@ export default function StudentDashboard() {
                 </div>
                 <button className="text-center" onClick={() => setFollowModal('followers')}>
                   <p className="text-base font-bold text-slate-100">{followers}</p>
-                  <p className="text-xs text-slate-500 hover:text-violet-400 transition-colors">Followers</p>
+                  <p className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Followers</p>
                 </button>
                 <button className="text-center" onClick={() => setFollowModal('following')}>
                   <p className="text-base font-bold text-slate-100">{following}</p>
-                  <p className="text-xs text-slate-500 hover:text-violet-400 transition-colors">Following</p>
+                  <p className="text-xs text-violet-400 hover:text-violet-300 transition-colors">Following</p>
                 </button>
               </div>
             </div>
           </div>
-
           <button onClick={() => setShowEditProfile(true)}
-            className="mt-4 w-full py-2 rounded-xl border border-slate-700 hover:border-violet-500 text-slate-300 hover:text-violet-300 text-sm font-medium transition-colors">
+            className="mt-4 w-full py-2 rounded-xl border border-[#1e1e35] hover:border-violet-500/50 text-slate-400 hover:text-violet-300 text-sm font-medium transition-all">
             Edit Profile
           </button>
         </div>
@@ -121,7 +118,7 @@ export default function StudentDashboard() {
         {/* Quick access */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <Link href="/dashboard/student/shorts"
-            className="flex items-center gap-3 bg-[#13131a] border border-slate-800 hover:border-violet-500 rounded-2xl p-4 transition-all group">
+            className="flex items-center gap-3 glass hover:border-violet-500/50 rounded-2xl p-4 transition-all group">
             <span className="text-2xl">🎬</span>
             <div>
               <p className="text-sm font-semibold text-slate-200 group-hover:text-violet-300 transition-colors">Reels</p>
@@ -129,7 +126,7 @@ export default function StudentDashboard() {
             </div>
           </Link>
           <Link href="/dashboard/student/papers"
-            className="flex items-center gap-3 bg-[#13131a] border border-slate-800 hover:border-violet-500 rounded-2xl p-4 transition-all group">
+            className="flex items-center gap-3 glass hover:border-violet-500/50 rounded-2xl p-4 transition-all group">
             <span className="text-2xl">📑</span>
             <div>
               <p className="text-sm font-semibold text-slate-200 group-hover:text-violet-300 transition-colors">Papers</p>
@@ -139,22 +136,20 @@ export default function StudentDashboard() {
         </div>
 
         {/* My Subjects */}
-        <h2 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wide">My Subjects</h2>
+        <h2 className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-widest">My Subjects</h2>
         {subjects.length === 0 ? (
-          <div className="bg-[#13131a] rounded-2xl border border-slate-800 p-6 text-slate-500 text-sm text-center">
+          <div className="glass rounded-2xl p-6 text-slate-500 text-sm text-center">
             No subjects yet.{' '}
-            <button onClick={() => setShowEditProfile(true)} className="text-violet-400 hover:text-violet-300">
-              Edit profile
-            </button>{' '}
+            <button onClick={() => setShowEditProfile(true)} className="text-violet-400 hover:text-violet-300">Edit profile</button>{' '}
             to add them.
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {subjects.map((subject) => (
               <button key={subject} onClick={() => setSelectedSubject(subject)}
-                className="bg-[#13131a] border border-slate-800 hover:border-violet-500 rounded-2xl p-4 text-left transition-all group">
-                <div className="w-8 h-8 rounded-lg bg-violet-900/40 flex items-center justify-center mb-2">
-                  <span className="text-violet-400 text-sm font-bold">{subject.charAt(0)}</span>
+                className="glass hover:border-violet-500/50 rounded-2xl p-4 text-left transition-all group hover:bg-violet-600/5">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600/30 to-fuchsia-600/20 flex items-center justify-center mb-2">
+                  <span className="text-violet-300 text-sm font-bold">{subject.charAt(0)}</span>
                 </div>
                 <p className="text-xs font-medium text-slate-200 group-hover:text-violet-300 transition-colors leading-snug">
                   {subject}
