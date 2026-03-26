@@ -17,6 +17,7 @@ export type Profile = {
   year: number | null
   subjects: string[]
   is_approved: boolean
+  avatar_url: string | null
 }
 
 export type Content = {

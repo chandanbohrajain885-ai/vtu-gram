@@ -83,6 +83,7 @@ export default function SignupClient() {
         name: form.name,
         role: 'student',
         usn: form.usn,
+        email: form.email,
         department: form.department,
         semester: semesterNum,
         year: isNaN(yearNum) ? null : yearNum,
