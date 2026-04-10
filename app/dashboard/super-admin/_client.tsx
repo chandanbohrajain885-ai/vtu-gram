@@ -110,6 +110,14 @@ export default function SuperAdminDashboard() {
     if (!file) { setError('Please select a file.'); return }
     if (!form.department) { setError('Please select a department.'); return }
     if (!form.subject) { setError('Please select a subject.'); return }
+
+    // Warn if file is large
+    const fileSizeMB = file.size / (1024 * 1024)
+    if (fileSizeMB > 50) {
+      setError(`File is ${fileSizeMB.toFixed(1)}MB. Please compress the video to under 50MB before uploading. Use a tool like HandBrake or an online video compressor.`)
+      return
+    }
+
     setUploading(true); setError(null); setSuccessMsg(null)
     try {
       const isMedia = form.type === 'video' || form.type === 'short'
