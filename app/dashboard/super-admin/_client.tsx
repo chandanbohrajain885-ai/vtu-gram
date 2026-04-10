@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, DEPARTMENTS, type Content } from '@/lib/supabase'
+import { supabase, DEPARTMENTS, LANGUAGES, type Content } from '@/lib/supabase'
 
 type ContentType = 'video' | 'short' | 'note' | 'question_paper'
 type Tab = 'upload' | 'content' | 'subjects'
@@ -25,6 +25,7 @@ export default function SuperAdminDashboard() {
   const [form, setForm] = useState({
     title: '', type: 'video' as ContentType,
     department: '', semester: '', year: '', subject: '', chapter: '',
+    language: 'English',
   })
   const [file, setFile] = useState<File | null>(null)
 
@@ -123,10 +124,11 @@ export default function SuperAdminDashboard() {
         semester: parseInt(form.semester, 10), subject: form.subject,
         chapter: form.chapter, type: form.type,
         file_url: urlData.publicUrl, status: 'approved',
+        language: form.language,
       })
       if (dbError) throw dbError
       setSuccessMsg('Content uploaded successfully!')
-      setForm({ title: '', type: 'video', department: '', semester: '', year: '', subject: '', chapter: '' })
+      setForm({ title: '', type: 'video', department: '', semester: '', year: '', subject: '', chapter: '', language: 'English' })
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       await loadContents()
@@ -297,6 +299,14 @@ export default function SuperAdminDashboard() {
                 <input name="chapter" required value={form.chapter} onChange={handleFormChange}
                   placeholder="e.g. Chapter 1"
                   className="w-full bg-[#0a0a0f] border border-slate-700 rounded-lg px-3 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500" />
+              </div>
+
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">Language</label>
+                <select name="language" value={form.language} onChange={handleFormChange}
+                  className="w-full bg-[#0a0a0f] border border-slate-700 rounded-lg px-3 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-violet-500">
+                  {LANGUAGES.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
               </div>
 
               <div className="sm:col-span-2">

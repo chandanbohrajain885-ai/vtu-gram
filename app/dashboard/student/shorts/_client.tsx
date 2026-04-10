@@ -37,6 +37,7 @@ export default function ShortsPage() {
         .eq('department', profileData.department ?? '')
         .eq('semester', profileData.semester ?? 0)
         .eq('status', 'approved')
+        .eq('language', profileData.preferred_language ?? 'English')
 
       setShorts(shortsData ?? [])
     } catch {

@@ -36,6 +36,7 @@ export default function SubjectModal({ subject, profile, onClose }: Props) {
         .eq('department', profile.department ?? '')
         .eq('semester', profile.semester ?? 0)
         .eq('status', 'approved')
+        .eq('language', profile.preferred_language ?? 'English')
 
       const { data: noteData } = await supabase
         .from('content')

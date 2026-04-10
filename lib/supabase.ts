@@ -38,7 +38,11 @@ export type Profile = {
   avatar_url: string | null
   email: string | null
   badge: Badge | null
+  preferred_language: Language
 }
+
+export const LANGUAGES = ['English', 'Kannada', 'Hindi'] as const
+export type Language = (typeof LANGUAGES)[number]
 
 export type Content = {
   id: string
@@ -50,6 +54,7 @@ export type Content = {
   type: 'video' | 'short' | 'note' | 'question_paper'
   file_url: string
   status: 'approved' | 'pending'
+  language: Language
 }
 
 export type Follow = {

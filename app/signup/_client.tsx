@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase, DEPARTMENTS, BADGES, type Badge } from '@/lib/supabase'
+import { supabase, DEPARTMENTS, BADGES, LANGUAGES, type Badge } from '@/lib/supabase'
 
 export default function SignupClient() {
   const router = useRouter()
@@ -16,6 +16,7 @@ export default function SignupClient() {
     department: '', semester: '', year: '', badge: '' as Badge | '',
   })
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
+  const [preferredLanguage, setPreferredLanguage] = useState('English')
 
   // Fetch subjects whenever dept + semester + year are all selected
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function SignupClient() {
         subjects: selectedSubjects,
         is_approved: true,
         badge: form.badge || null,
+        preferred_language: preferredLanguage,
       })
       if (profileError) { setError(profileError.message); return }
       router.push('/dashboard/student')
@@ -155,6 +157,24 @@ export default function SignupClient() {
                       : 'bg-white/5 border-[#1e1e35] text-slate-400 hover:border-violet-600/40 hover:text-slate-200'
                   }`}>
                   {b}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Preferred Language */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-2">Preferred Video Language</label>
+            <div className="flex gap-2">
+              {LANGUAGES.map((lang) => (
+                <button key={lang} type="button"
+                  onClick={() => setPreferredLanguage(lang)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                    preferredLanguage === lang
+                      ? 'bg-violet-600/30 border-violet-500 text-violet-200'
+                      : 'bg-white/5 border-[#1e1e35] text-slate-400 hover:border-violet-600/40'
+                  }`}>
+                  {lang}
                 </button>
               ))}
             </div>

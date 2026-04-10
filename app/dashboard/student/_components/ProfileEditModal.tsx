@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { supabase, DEPARTMENTS, BADGES, BADGE_STYLE, type Profile, type Badge } from '@/lib/supabase'
+import { supabase, DEPARTMENTS, BADGES, BADGE_STYLE, LANGUAGES, type Profile, type Badge, type Language } from '@/lib/supabase'
 
 interface Props {
   profile: Profile
@@ -13,6 +13,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState(profile.name)
   const [badge, setBadge] = useState<Badge | null>(profile.badge ?? null)
+  const [preferredLanguage, setPreferredLanguage] = useState<Language>(profile.preferred_language ?? 'English')
   const [department, setDepartment] = useState(profile.department ?? '')
   const [year, setYear] = useState(String(profile.year ?? ''))
   const [semester, setSemester] = useState(String(profile.semester ?? ''))
@@ -84,6 +85,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
         subjects: selectedSubjects,
         avatar_url,
         badge,
+        preferred_language: preferredLanguage,
       }
 
       const { error: updateError } = await supabase
@@ -154,6 +156,25 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Preferred Language */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-2">Preferred Video Language</label>
+            <div className="flex gap-2">
+              {LANGUAGES.map((lang) => (
+                <button key={lang} type="button"
+                  onClick={() => setPreferredLanguage(lang)}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
+                    preferredLanguage === lang
+                      ? 'bg-violet-600/30 border-violet-500 text-violet-200'
+                      : 'bg-white/5 border-[#1e1e35] text-slate-400 hover:border-violet-600/40 hover:text-slate-200'
+                  }`}>
+                  {lang}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-600 mt-1">Videos and reels will be filtered by this language</p>
           </div>
 
           {/* USN — read only */}
